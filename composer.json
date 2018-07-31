@@ -1,0 +1,24 @@
+{
+  "name": "lartak/projet-4-blog-d-un-ecrivain",
+  "description": "Refactoring du projet : https://github.com/Nin1963/Projet-4-Blog-d-un-ecrivain",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "homepage": "https://alaska.lartak.fr",
+  "type": "project",
+  "version": "1.0",
+  "authors": [
+    {
+      "name": "Lartak",
+      "email": "webmaster@lartak.fr"
+    }
+  ],
+  "require": {
+    "php": "^5.5 || ^7.0",
+    "ext-PDO": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "AlaskaBlog\\": ".src/"
+    }
+  }
+}
