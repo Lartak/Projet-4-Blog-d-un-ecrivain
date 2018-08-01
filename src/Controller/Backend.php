@@ -31,7 +31,6 @@ class Backend extends Manager
 
     public function listChaptersBackend()
     {
-        $this->restrict();
         $chapterManager = new \AlaskaBlog\Model\ChapterManager();
         $chapters = $chapterManager->findAll();
 
