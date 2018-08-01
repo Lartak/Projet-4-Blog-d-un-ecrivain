@@ -23,6 +23,7 @@ class Backend extends Manager
 
     public function listChaptersBackend()
     {
+        $this->restrict();
         $chapterManager = new \AlaskaBlog\Model\ChapterManager();
         $chapters = $chapterManager->findAll();
 
@@ -31,6 +32,7 @@ class Backend extends Manager
 
     public function chapterBackend()
     {
+        $this->restrict();
         $id = $_GET['id'];
         $chapterManager = new \AlaskaBlog\Model\ChapterManager();
         $commentManager = new \AlaskaBlog\Model\CommentManager();
@@ -46,6 +48,7 @@ class Backend extends Manager
      */
     public function addChapter($title, $content)
     {
+        $this->restrict();
         $chapterManager = new \AlaskaBlog\Model\ChapterManager();
         $affectedLines = $chapterManager->create($title, $content);
         if ($affectedLines === true) {
@@ -60,26 +63,28 @@ class Backend extends Manager
      * @param int $id
      * @param string $title
      * @param string $content
-     * @throws \Exception
      */
     public function modifyChapter($id, $title, $content)
     {
+        $this->restrict();
         $chapterManager = new \AlaskaBlog\Model\ChapterManager();
         $affectedLines = $chapterManager->update($id, nl2br(htmlspecialchars($title)), nl2br(htmlspecialchars($content)));
 
         if ($affectedLines === false) {
-            throw new \Exception('Impossible de modifier ce chapitre !');
-        } else {
+            $this->setFlash('Impossible de modifier ce chapitre !', 'danger');
             $this->redirect('?action=dashboard');
+        } else {
+            $this->setFlash('Chapitre modifié');
+            $this->redirect("?chapterBackend&amp;id={$id}");
         }
     }
 
     /**
      * @param int $id
-     * @throws \Exception
      */
     public function deleteChapter($id)
     {
+        $this->restrict();
         $chapterManager = new \AlaskaBlog\Model\ChapterManager();
         $deleteChapter = $chapterManager->delete($id);
 
@@ -97,6 +102,7 @@ class Backend extends Manager
      */
     public function commentBackend($id)
     {
+        $this->restrict();
         $commentManager = new \AlaskaBlog\Model\CommentManager();
         $comment = $commentManager->get($id);
 
@@ -105,6 +111,7 @@ class Backend extends Manager
 
     public function signalCommentBackend()
     {
+        $this->restrict();
         $commentManager = new \AlaskaBlog\Model\CommentManager();
         $comments = $commentManager->findAllSignaled();
 
@@ -113,34 +120,36 @@ class Backend extends Manager
 
     /**
      * @param int $id
-     * @throws \Exception
      */
     public function deleteComment($id)
     {
+        $this->restrict();
         $commentManager = new \AlaskaBlog\Model\CommentManager();
         $deleteComment = $commentManager->delete($id);
 
         if ($deleteComment > 0) {
-            $this->redirect('?action=commentSignal');
+            $this->setFlash('Commentaire supprimé');
         } else {
-            throw new \Exception('Impossible de supprimer ce commentaire !');
+            $this->setFlash('Impossible de supprimer ce commentaire !', 'error');
         }
+        $this->redirect('?action=commentSignal');
     }
 
     /**
      * @param int $id
-     * @throws \Exception
      */
     public function approveComment($id)
     {
+        $this->restrict();
         $commentManager = new \AlaskaBlog\Model\CommentManager();
         $commentApprove = $commentManager->approve($id);
 
         if ($commentApprove > 0) {
-            $this->redirect('?action=commentSignal');
+            $this->setFlash('Commentaire approuvé');
         } else {
-            throw new \Exception('Impossible d\'approuver ce commentaire !');
+            $this->setFlash('Impossible d\'approuver ce commentaire !', 'danger');
         }
+        $this->redirect('?action=commentSignal');
     }
 
     public function logOut()
@@ -149,5 +158,13 @@ class Backend extends Manager
         session_start();
         $this->setFlash('Vous êtes à présent déconnecté', 'info');
         $this->redirect();
+    }
+
+    private function restrict()
+    {
+        if (!$this->isAdmin()) {
+            $this->setFlash('Vous n\'êtes pas autorisé à accéder à cette page', $this::FLASH_ERROR);
+            $this->redirect();
+        }
     }
 }

@@ -24,6 +24,13 @@ class Manager
      * @var \PDO
      */
     private $db;
+    /**
+     * Classes pour l'élément des messages Flash
+     */
+    const FLASH_SUCCESS = 'success';
+    const FLASH_ERROR = 'danger';
+    const FLASH_WARNING = 'warning';
+    const FLASH_INFO = 'info';
 
     public function __construct()
     {
@@ -108,5 +115,18 @@ class Manager
     public function isAdmin()
     {
         return (new AdminManager())->isAdmin();
+    }
+
+    /**
+     * @param bool $fakeMethod
+     * @return string
+     */
+    public function getMethod($fakeMethod = false)
+    {
+        $method = $_SERVER['REQUEST_METHOD'];
+        if ($fakeMethod) {
+            $method = $_SERVER['REQUEST_METHOD'];
+        }
+        return strtoupper($method);
     }
 }

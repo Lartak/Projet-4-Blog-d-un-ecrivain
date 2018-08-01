@@ -40,8 +40,14 @@ class AdminManager extends Manager
         return $req->fetch();
 	}
 
-	public function isAdmin()
+    /**
+     * @return bool
+     */
+    public function isAdmin()
     {
-        return !empty($_SESSION['administrateur'] && $_SESSION['administrateur'] === true);
+        if (isset($_SESSION['administrateur']) && !empty($_SESSION['administrateur'])) {
+            return $_SESSION['administrateur'] === true;
+        }
+        return false;
     }
 }

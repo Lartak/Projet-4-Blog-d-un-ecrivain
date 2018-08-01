@@ -76,10 +76,11 @@ class Frontend extends Manager
         $affectedLines = $commentManager->create($chapterId, $author, $comment);
 
         if ($affectedLines === false) {
-            throw new \Exception('Impossible d\'ajouter le commentaire !');
+            $this->setFlash('Impossible d\'ajouter le commentaire !', 'warning');
         } else {
-            $this->redirect("?action=chapter&id={$chapterId}");
+            $this->setFlash('Votre commentaire a bien été ajouté');
         }
+        $this->redirect("?action=chapter&id={$chapterId}");
     }
 
     /**
@@ -101,9 +102,10 @@ class Frontend extends Manager
         $commentManager = new \AlaskaBlog\Model\CommentManager();
         $signal = $commentManager->signal($commentId);
         if ($signal > 0) {
+            $this->setFlash('Votre signalement nous est bien parvenu');
             $this->redirect($_SERVER['HTTP_REFERER']);
         } else {
-            echo 'Ce commentaire est en attente de modération, je me dépêche ;)' ;
+            $this->setFlash('Ce commentaire est en attente de modération, je me dépêche ;)', 'info');
         }
 
         include VIEWS . 'Frontend' . DS . 'comment.php';

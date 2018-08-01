@@ -27,10 +27,10 @@ try {
                 include VIEWS . 'Frontend' . DS . 'connexion.php';
                 break;
             case 'login':
-                if (!empty($_POST['login']) AND !empty($_POST['password'])):
+                if ($frontend->getMethod() === 'POST' && !empty($_POST['login']) && !empty($_POST['password'])):
                     $frontend->checkLogin($_POST['login'], $_POST['password']);
                 else:
-                    $frontend->setFlash('Veuillez remplir tous les champs', 'danger');
+                    $frontend->setFlash('Veuillez remplir tous les champs', $frontend::FLASH_WARNING);
                     $frontend->redirect('?action=connexion');
                 endif;
                 break;
@@ -38,40 +38,37 @@ try {
                 if (isset($_GET['id']) && $_GET['id'] > 0):
                     $frontend->chapter($_GET['id']);
                 else:
-                    $frontend->setFlash('Aucun identifiant de chapitre envoyé', 'info');
+                    $frontend->setFlash('Aucun identifiant de chapitre envoyé', $frontend::FLASH_INFO);
                     $frontend->redirect($frontend->getReferer());
                 endif;
                 break;
             case 'comment':
-                if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && $_GET['id'] > 0):
+                if ($frontend->getMethod() === 'GET' && isset($_GET['id']) && $_GET['id'] > 0):
                     $frontend->comment($_GET['id']);
-                elseif ($_SERVER['REQUEST_METHOD'] === 'POST'):
-                    switch ($_POST['_method']):
-                        case 'POST':
-                            $frontend->addComment($_POST['id'], $_POST['author'], $_POST['comment']);
-                            break;
-                        case 'PUT':
-                            if ($backend->isAdmin()):
+                elseif ($frontend->getMethod() === 'POST'):
+                    if ($frontend->getMethod(true) === 'POST'):
+                        $frontend->addComment($_POST['id'], $_POST['author'], $_POST['comment']);
+                    elseif(in_array($backend->getMethod(true), ['PUT', 'DELETE']) && $backend->isAdmin()):
+                        switch ($frontend->getMethod(true)):
+                            case 'PUT':
                                 $backend->approveComment($_POST['id']);
-                            else:
-                                $frontend->redirect($frontend->getReferer());
-                            endif;
-                            break;
-                        case 'DELETE':
-                            if ($backend->isAdmin()):
+                                break;
+                            case 'DELETE':
                                 $backend->deleteComment($_POST['id']);
-                            else:
-                                $frontend->redirect($frontend->getReferer());
-                            endif;
-                            break;
-                    endswitch;
+                                break;
+                        endswitch;
+                    else:
+                        $backend->redirect($backend->getReferer());
+                    endif;
+                else:
+                    $frontend->redirect($frontend->getReferer());
                 endif;
                 break;
             case 'signal':
-                if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['id']) && $_POST['id'] > 0):
+                if ($frontend->getMethod() === 'POST' && !empty($_POST['id']) && $_POST['id'] > 0):
                     $frontend->signalComment($_POST['id']);
                 else:
-                    $frontend->setFlash('Votre requête n\'a pu aboutir :(', 'danger');
+                    $frontend->setFlash('Votre requête n\'a pu aboutir :(', $frontend::FLASH_ERROR);
                     $frontend->redirect($frontend->getReferer());
                 endif;
                 break;
@@ -85,7 +82,7 @@ try {
                 if (isset($_GET['id']) && $_GET['id'] > 0):
                     $backend->chapterBackend();
                 else:
-                    $backend->setFlash('Aucun identifiant de chapitre envoyé', 'danger');
+                    $backend->setFlash('Aucun identifiant de chapitre envoyé', $frontend::FLASH_ERROR);
                     $backend->redirect($backend->getReferer());
                 endif;
                 break;
@@ -93,7 +90,7 @@ try {
                 if (!empty($_POST['title']) && !empty($_POST['content'])):
                     $backend->addChapter($_POST['title'], $_POST['content']);
                 else:
-                    $frontend->setFlash('Tous les champs ne sont pas remplis !', 'danger');
+                    $backend->setFlash('Tous les champs ne sont pas remplis !', $backend::FLASH_WARNING);
                 endif;
                 break;
             case 'modifyChapter':
@@ -101,17 +98,17 @@ try {
                     if (!empty($_POST['title']) && !empty($_POST['content'])):
                         $backend->modifyChapter($_GET['id'], $_POST['title'], $_POST['content']);
                     else:
-                        throw new Exception('Tous les champs ne sont pas remplis !');
+                        $backend->setFlash('Tous les champs ne sont pas remplis !', $backend::FLASH_WARNING);
                     endif;
                 else:
-                    throw new Exception('Aucun identifiant de chapitre envoyé');
+                    $backend->setFlash('Aucun identifiant de chapitre envoyé', $backend::FLASH_WARNING);
                 endif;
                 break;
             case 'deleteChapter':
                 if (isset($_POST['id']) && (int)$_POST['id'] > 0):
                     $backend->deleteChapter($_POST['id']);
                 else:
-                    throw new Exception('Aucun identifiant de chapitre envoyé');
+                    $backend->setFlash('Aucun identifiant de chapitre envoyé', $backend::FLASH_WARNING);
                 endif;
                 break;
             case 'signals':
@@ -121,26 +118,26 @@ try {
                 if (isset($_GET['id']) && $_GET['id'] > 0):
                     $backend->deleteComment($_GET['id']);
                 else:
-                    throw new Exception('Aucun identifiant de commentaire envoyé');
+                    $backend->setFlash('Aucun identifiant de chapitre envoyé', $backend::FLASH_WARNING);
                 endif;
                 break;
             case 'approve':
                 if (isset($_GET['id']) && $_GET['id'] > 0):
                     $backend->approveComment($_GET['id']);
                 else:
-                    throw new Exception('Aucun identifiant de commentaire envoyé');
+                    $backend->setFlash('Aucun identifiant de commentaire envoyé', $backend::FLASH_WARNING);
                 endif;
                 break;
             case 'logout':
                 $backend->logOut();
                 break;
             default:
-                header('Location: /');
+                $frontend->redirect();
                 break;
         endswitch;
     else:
         $frontend->listChapters();
     endif;
 } catch(Exception $e) {
-    echo 'Erreur : ' . $e->getMessage();
+    $frontend->setFlash($e->getMessage(), $backend::FLASH_ERROR);
 }
