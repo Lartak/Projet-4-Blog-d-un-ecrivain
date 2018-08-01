@@ -58,7 +58,7 @@ try {
                                 break;
                         endswitch;
                     else:
-                        $frontend->redirect($backend->getReferer());
+                        $frontend->redirect($frontend->getReferer());
                     endif;
                 else:
                     $frontend->redirect($frontend->getReferer());
