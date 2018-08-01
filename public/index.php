@@ -19,7 +19,6 @@ if (!class_exists('AlaskaBlog\Controller\AdminManager')) {
     require APP . 'Controller' . DS . 'Backend.php';
 }
 $frontend = new AlaskaBlog\Controller\Frontend();
-$backend = new AlaskaBlog\Controller\Backend();
 try {
     if (isset($_GET['action'])):
         switch ($_GET['action']):
@@ -48,8 +47,9 @@ try {
                 elseif ($frontend->getMethod() === 'POST'):
                     if ($frontend->getMethod(true) === 'POST'):
                         $frontend->addComment($_POST['id'], $_POST['author'], $_POST['comment']);
-                    elseif(in_array($backend->getMethod(true), ['PUT', 'DELETE']) && $backend->isAdmin()):
-                        switch ($frontend->getMethod(true)):
+                    elseif(in_array($frontend->getMethod(true), ['PUT', 'DELETE'])):
+                        $backend = new AlaskaBlog\Controller\Backend();
+                        switch ($backend->getMethod(true)):
                             case 'PUT':
                                 $backend->approveComment($_POST['id']);
                                 break;
@@ -58,7 +58,7 @@ try {
                                 break;
                         endswitch;
                     else:
-                        $backend->redirect($backend->getReferer());
+                        $frontend->redirect($backend->getReferer());
                     endif;
                 else:
                     $frontend->redirect($frontend->getReferer());
@@ -73,6 +73,7 @@ try {
                 endif;
                 break;
             case 'dashboard':
+                $backend = new AlaskaBlog\Controller\Backend();
                 $backend->listChaptersBackend();
                 break;
             case 'add':
@@ -80,20 +81,25 @@ try {
                 break;
             case 'chapterBackend':
                 if (isset($_GET['id']) && $_GET['id'] > 0):
+                    $backend = new AlaskaBlog\Controller\Backend();
                     $backend->chapterBackend();
                 else:
+                    $backend = new AlaskaBlog\Controller\Backend();
                     $backend->setFlash('Aucun identifiant de chapitre envoyé', $frontend::FLASH_ERROR);
                     $backend->redirect($backend->getReferer());
                 endif;
                 break;
             case 'addChapter':
                 if (!empty($_POST['title']) && !empty($_POST['content'])):
+                    $backend = new AlaskaBlog\Controller\Backend();
                     $backend->addChapter($_POST['title'], $_POST['content']);
                 else:
+                    $backend = new AlaskaBlog\Controller\Backend();
                     $backend->setFlash('Tous les champs ne sont pas remplis !', $backend::FLASH_WARNING);
                 endif;
                 break;
             case 'modifyChapter':
+                $backend = new AlaskaBlog\Controller\Backend();
                 if (isset($_GET['id']) && $_GET['id'] > 0):
                     if (!empty($_POST['title']) && !empty($_POST['content'])):
                         $backend->modifyChapter($_GET['id'], $_POST['title'], $_POST['content']);
@@ -105,6 +111,7 @@ try {
                 endif;
                 break;
             case 'deleteChapter':
+                $backend = new AlaskaBlog\Controller\Backend();
                 if (isset($_POST['id']) && (int)$_POST['id'] > 0):
                     $backend->deleteChapter($_POST['id']);
                 else:
@@ -112,9 +119,11 @@ try {
                 endif;
                 break;
             case 'signals':
+                $backend = new AlaskaBlog\Controller\Backend();
                 $backend->signalCommentBackend();
                 break;
             case 'deleteComment':
+                $backend = new AlaskaBlog\Controller\Backend();
                 if (isset($_GET['id']) && $_GET['id'] > 0):
                     $backend->deleteComment($_GET['id']);
                 else:
@@ -122,6 +131,7 @@ try {
                 endif;
                 break;
             case 'approve':
+                $backend = new AlaskaBlog\Controller\Backend();
                 if (isset($_GET['id']) && $_GET['id'] > 0):
                     $backend->approveComment($_GET['id']);
                 else:
@@ -129,6 +139,7 @@ try {
                 endif;
                 break;
             case 'logout':
+                $backend = new AlaskaBlog\Controller\Backend();
                 $backend->logOut();
                 break;
             default:
@@ -139,5 +150,5 @@ try {
         $frontend->listChapters();
     endif;
 } catch(Exception $e) {
-    $frontend->setFlash($e->getMessage(), $backend::FLASH_ERROR);
+    $frontend->setFlash($e->getMessage(), $frontend::FLASH_ERROR);
 }
